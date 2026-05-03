@@ -379,13 +379,16 @@ def page_home():
     st.markdown("---")
     st.markdown("### 🧰 快速访问")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("📖 思维工具词典", use_container_width=True):
             navigate_to("tools")
     with col2:
         if st.button("📝 我的记录", use_container_width=True):
             navigate_to("journal")
+    with col3:
+        if st.button("⚙️ 设置", use_container_width=True):
+            navigate_to("settings")
 
 def page_week():
     week = next((w for w in WEEKLY_DATA if w["id"] == st.session_state.current_week), None)
