@@ -556,6 +556,74 @@ def page_settings():
     if st.button("← 返回首页"):
         go_home()
 
+def page_ai_chat():
+    st.markdown("## 🤖 AI 对话")
+
+    if st.button("← 返回"):
+        go_home()
+
+    config = st.session_state.ai_config
+    if not config["api_endpoint"] or not config["api_key"]:
+        st.warning("请先在设置页面配置 AI 信息")
+        return
+
+    # 显示提示词
+    if "ai_prompt" in st.session_state:
+        st.markdown("### 📋 提示词")
+        st.code(st.session_state.ai_prompt, language=None)
+        st.markdown("---")
+
+    # 对话历史
+    if "ai_messages" not in st.session_state:
+        st.session_state.ai_messages = []
+
+    for msg in st.session_state.ai_messages:
+        role_label = "👤 你" if msg["role"] == "user" else "🤖 AI"
+        st.markdown(f"**{role_label}**：{msg['content']}")
+
+    # 用户输入
+    user_input = st.text_area("你的输入（粘贴你的记录或回答）", height=100, key="ai_user_input")
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        send = st.button("🚀 发送", use_container_width=True)
+    with col2:
+        if st.button("🗑 清空", use_container_width=True):
+            st.session_state.ai_messages = []
+            st.rerun()
+
+    if send and user_input:
+        # 添加用户消息
+        st.session_state.ai_messages.append({"role": "user", "content": user_input})
+
+        # 调用 AI
+        with st.spinner("🤖 AI 思考中..."):
+            try:
+                import requests
+                headers = {
+                    "Authorization": f"Bearer {config['api_key']}",
+                    "Content-Type": "application/json"
+                }
+                messages = [{"role": m["role"], "content": m["content"]} for m in st.session_state.ai_messages]
+                payload = {
+                    "model": config["model"] or "gpt-4o",
+                    "messages": messages
+                }
+                response = requests.post(
+                    f"{config['api_endpoint']}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=120
+                )
+                response.raise_for_status()
+                result = response.json()
+                reply = result["choices"][0]["message"]["content"]
+                st.session_state.ai_messages.append({"role": "assistant", "content": reply})
+            except Exception as e:
+                st.error(f"请求失败：{str(e)}")
+
+        st.rerun()
+
 # ===================================================================
 # Main
 # ===================================================================
@@ -575,6 +643,8 @@ def main():
         page_journal()
     elif page == "settings":
         page_settings()
+    elif page == "ai_chat":
+        page_ai_chat()
     else:
         page_home()
 
