@@ -355,7 +355,7 @@ def render_tool_card(tool):
     with st.expander(f"**{tool['name']}** — {tool['summary']}"):
         if "source" in tool:
             st.markdown(f"**来源：** {tool['source']}")
-        st.markdown(f"**定义：** {tool['summary']}")
+        st.markdown(f"**定义：** {tool.get('detail', tool['summary'])}")
         if "question" in tool:
             st.markdown(f"**触发问题：** {tool['question']}")
 
